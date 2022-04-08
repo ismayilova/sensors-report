@@ -21,7 +21,9 @@ class ReadingFilesSpec extends AnyFunSpec {
 
       it("correctly compute Response") {
         val response =  readingFiles.getMesaurments(fakeReports._1,fakeReports._2)
-        assert(response.allMeasurments ==2)
+        assert(response.allMeasurments ==fakeResponse.allMeasurments)
+        assert(response.failed==fakeResponse.failed)
+        assert(response.list ==fakeResponse.list)
       }
     }
   }
