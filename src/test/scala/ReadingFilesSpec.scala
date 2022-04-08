@@ -5,13 +5,13 @@ import org.scalatest.funspec.AnyFunSpec
  * @author KamilaI
  */
 class ReadingFilesSpec extends AnyFunSpec {
-  val readingFiles = ReadingFiles
+  val readingFiles =  ReadingFiles
 
 
 
     val fakeReports =(1,
       List(Humidity("s1",Some(2)),
-        Humidity("s2",Some(6))))
+        Humidity("s1",Some(6))))
 
     val fakeResponse  = Response(1,0,2,List(Sensor("s1",2,4,6)))
 
