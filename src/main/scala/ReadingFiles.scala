@@ -3,7 +3,6 @@ import java.util
 
 import com.typesafe.config.{Config, ConfigFactory}
 import ClassMapper._
-import ReadingFiles.lines
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -14,20 +13,19 @@ import scala.collection.{Set, _}
 /**
  * @author KamilaI
  */
-object ReadingFiles extends App {
+object ReadingFiles  {
  val config = ConfigFactory.load()
 
  val filePath = config.getString("file-path")
 
-  case class Sensor(id:String ,min:Int,abg:Int,max:Int )
+  case class Sensor(id:String ,min:Int,avg:Int,max:Int )
   case class Humidity(sensorId: String,humidityLevel:Option[Int])
-  case class Response(filesCoun:Int,failed:Int,allMeasurments:Int,list: List[Sensor])
+  case class Response(filesCount:Int, failed:Int, allMeasurements:Int, list: List[Sensor])
 
   def readFiles(path:String) ={
   val files = new File(path).listFiles.filter(_.getName.endsWith(".csv")).toList
 
- val res=  files.map(f =>f.read())
-    .flatten.map(line=>
+ val res=  files.flatMap(f => f.read()).map(line=>
     line.split(",").toList
   )
     .map(e=> Humidity(e.head,e.last.toOptionInt()))
@@ -37,10 +35,9 @@ object ReadingFiles extends App {
 }
 
   def computeSensorData(sensorId:String ,reports: List[Humidity]) ={
-   val noneEmptyMesaurments = reports.filter(mes =>mes.humidityLevel!=None)
+   val noneEmptyMesaurments = reports.filter(mes =>mes.humidityLevel.isDefined)
    noneEmptyMesaurments match {
      case ::(head, next) =>
-
        val avg =  noneEmptyMesaurments.map(_.humidityLevel match {
        case Some(value) => value
        case None =>0
@@ -65,23 +62,28 @@ object ReadingFiles extends App {
    }
  }
 
-  def getMesaurments(lines:(Int, List[Humidity])) = {
+  def getMeasurements(lines:(Int, List[Humidity])) = {
     println(lines)
   val filesCount = lines._1
-  val failed = lines._2.filter(p=> p.humidityLevel==None).size
+  val failed = lines._2.count(p => p.humidityLevel.isEmpty)
   val reportsCounts = lines._2.size
 
   val grouped = lines._2.groupBy(l=>l.sensorId)
 
   val res  = for((k,v)<-grouped)yield { computeSensorData(k,v)}
 
-   Response(filesCount,failed,reportsCounts,res.toList)
+   Response(filesCount,failed,reportsCounts,res.toList.sortBy(_.avg)(Ordering[Int].reverse))
 }
 
 
-  val lines: (Int, List[Humidity]) = readFiles(filePath)
-  val result = getMesaurments(lines)
-  println(result)
+def print(response: Response) = {
 
+}
+
+  def main(args: Array[String]): Unit = {
+    val lines: (Int, List[Humidity]) = readFiles(filePath)
+    val result = getMeasurements(lines)
+    println(result)
+  }
 
 }
