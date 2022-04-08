@@ -24,8 +24,7 @@ object ReadingFiles  {
 
   def readFiles(path:String) ={
   val files = new File(path).listFiles.filter(_.getName.endsWith(".csv")).toList
-
- val res=  files.flatMap(f => f.read()).map(line=>
+  val res:List[Humidity] =  files.flatMap(f => f.read()).map(line=>
     line.split(",").toList
   )
     .map(e=> Humidity(e.head,e.last.toOptionInt()))
@@ -35,15 +34,15 @@ object ReadingFiles  {
 }
 
   def computeSensorData(sensorId:String ,reports: List[Humidity]) ={
-   val noneEmptyMesaurments = reports.filter(mes =>mes.humidityLevel.isDefined)
-   noneEmptyMesaurments match {
+   val noneEmptyMeasurements = reports.filter(_.humidityLevel.isDefined)
+   noneEmptyMeasurements match {
      case ::(head, next) =>
-       val avg =  noneEmptyMesaurments.map(_.humidityLevel match {
+       val avg =  noneEmptyMeasurements.map(_.humidityLevel match {
        case Some(value) => value
        case None =>0
-     }).sum/noneEmptyMesaurments.length
+     }).sum/noneEmptyMeasurements.length
 
-       val max =  noneEmptyMesaurments.map(_.humidityLevel
+       val max =  noneEmptyMeasurements.map(_.humidityLevel
        match {
          case Some(value) =>value
          case None => 0
@@ -51,7 +50,7 @@ object ReadingFiles  {
        ).max
 
 
-       val min =  noneEmptyMesaurments.map(_.humidityLevel
+       val min =  noneEmptyMeasurements.map(_.humidityLevel
        match {
          case Some(value) =>value
          case None => 0
@@ -65,10 +64,10 @@ object ReadingFiles  {
   def getMeasurements(lines:(Int, List[Humidity])) = {
     println(lines)
   val filesCount = lines._1
-  val failed = lines._2.count(p => p.humidityLevel.isEmpty)
+  val failed = lines._2.count(_.humidityLevel.isEmpty)
   val reportsCounts = lines._2.size
 
-  val grouped = lines._2.groupBy(l=>l.sensorId)
+  val grouped = lines._2.groupBy(_.sensorId)
 
   val res  = for((k,v)<-grouped)yield { computeSensorData(k,v)}
 
